@@ -4,15 +4,123 @@
 
 #include "QtWidgetStoolkit.h"
 
-//
-// Created by KoTz on 17/07/2026.
-//
-#include <QPainter>
-#include <QVBoxLayout>
-
-
 
 QtToolkit::ProgessBar::SegmentedProgressBar *QtToolkit::ProgessBar::SegmentedProgressBar::s_instance = nullptr;
+QWidget *QtToolkit::Window::Dragger::s_target = nullptr;
+QtToolkit::Window::Dragger *QtToolkit::Window::Dragger::s_instance = nullptr;
+bool QtToolkit::Window::Maximizer::m_isMaximized = false;
+QRect QtToolkit::Window::Maximizer::m_normalGeometry;
+QLabel *QtToolkit::Window::Maximizer::m_frameSnapshot = nullptr;
+
+
+bool QtToolkit::Window::Dragger::eventFilter(QObject* watched, QEvent* event)
+{
+    if (s_target != nullptr)
+    {
+        if (watched == s_target) {
+            if (event->type() == QEvent::MouseButtonPress) {
+                auto *mouseEvent = static_cast<QMouseEvent*>(event);
+                if (mouseEvent->button() == Qt::LeftButton) {
+                    m_dragging = true;
+                    m_dragStartPosition = mouseEvent->globalPosition().toPoint() - s_target->frameGeometry().topLeft();
+                    return true;
+                }
+            }
+            else if (event->type() == QEvent::MouseMove) {
+                auto *mouseEvent = static_cast<QMouseEvent*>(event);
+                if (m_dragging && (mouseEvent->buttons() & Qt::LeftButton)) {
+                    s_target->move(mouseEvent->globalPosition().toPoint() - m_dragStartPosition);
+                    return true;
+                }
+            }
+            else if (event->type() == QEvent::MouseButtonRelease) {
+                m_dragging = false;
+                return true;
+            }
+        }
+        return QObject::eventFilter(watched, event);
+    }
+    return false;
+}
+
+void QtToolkit::Window::Dragger::attach(QWidget* widget)
+{
+    if (widget != nullptr)
+    {
+        s_target = widget;
+        if (s_instance == nullptr)
+        {
+            s_instance = new Dragger();
+        }
+        widget->installEventFilter(s_instance);
+    }
+}
+
+QLabel *QtToolkit::Blur::render(QWidget* parent,qreal blurRadius)
+{
+    if (parent == nullptr || blurRadius <= 0.0) {
+        return nullptr;
+    }
+
+    QPixmap original = parent->grab();
+    if (original.isNull()) {
+        return nullptr;
+    }
+
+    QGraphicsScene scene;
+    QGraphicsPixmapItem item(original);
+
+    std::unique_ptr<QGraphicsBlurEffect> blur = std::make_unique<QGraphicsBlurEffect>();
+    blur->setBlurRadius(blurRadius);
+    item.setGraphicsEffect(blur.release());
+
+    scene.addItem(&item);
+
+    QPixmap blurred(original.size());
+    blurred.fill(Qt::transparent);
+
+    QPainter painter(&blurred);
+    scene.render(
+        &painter,
+        QRectF(0, 0, blurred.width(), blurred.height()),
+        QRectF(0, 0, original.width(), original.height()));
+    painter.end();
+
+    if (blurred.isNull()) {
+        return nullptr;
+    }
+
+       QLabel *label = new QLabel(parent);
+        label->setPixmap(blurred);
+        label->setGeometry(parent->rect());
+        label->show();
+        label->raise();
+
+    return label;
+}
+
+void QtToolkit::Window::Maximizer::toggle(QWidget* widget,int msec)
+{
+    if (widget != nullptr)
+    {
+        auto *anim = new QPropertyAnimation(widget, "geometry");
+        anim->setDuration(msec);
+        anim->setEasingCurve(QEasingCurve::OutCubic);
+
+        if (!m_isMaximized) {
+            m_normalGeometry = widget->geometry();
+            QRect screenGeometry = this->screen()->availableGeometry();
+            anim->setStartValue(widget->geometry());
+            anim->setEndValue(screenGeometry);
+            m_isMaximized = true;
+        } else {
+            anim->setStartValue(widget->geometry());
+            anim->setEndValue(m_normalGeometry);
+            m_isMaximized = false;
+        }
+        anim->start(QAbstractAnimation::DeleteWhenStopped);
+    }
+}
 
 QtToolkit::ProgessBar::SegmentedProgressBar::SegmentedProgressBar(QWidget *parent)
     : QProgressBar(parent)
@@ -128,62 +236,67 @@ void QtToolkit::ProgessBar::SegmentedProgressBar::paintEvent(QPaintEvent *event)
 }
 
 void QtToolkit::Splitter::setupSplitter(
-        QWidget* pai,
-        QWidget* irmao_1,
-        QWidget* irmao_2,
+        QWidget* parent,
+        QWidget* firstChild,
+        QWidget* secondChild,
         QFrame::Shape shape,
-        QString StyleSheets)
+        QString styleSheet)
 {
-    if (pai != nullptr && irmao_1 != nullptr && irmao_2 != nullptr)
+    if (parent != nullptr && firstChild != nullptr && secondChild != nullptr)
     {
-        QLayout *mainLayout = pai->layout();
+        QLayout *mainLayout = parent->layout();
 
-        mainLayout->removeWidget(irmao_1);
-        mainLayout->removeWidget(irmao_2);
+        mainLayout->removeWidget(firstChild);
+        mainLayout->removeWidget(secondChild);
 
-        QSplitter *splitter = new QSplitter(Qt::Horizontal, pai);
-        splitter->addWidget(irmao_1);
-        splitter->addWidget(irmao_2);
+        QSplitter *splitter = new QSplitter(Qt::Horizontal, parent);
+        splitter->addWidget(firstChild);
+        splitter->addWidget(secondChild);
         splitter->setHandleWidth(4);
         splitter->setStretchFactor(0, 1);
         splitter->setStretchFactor(1, 3);
 
         mainLayout->addWidget(splitter);
 
-        splitter->setStyleSheet(StyleSheets);
+        if (styleSheet.isEmpty() == false)
+        {
+            splitter->setStyleSheet(styleSheet);
+        }
         splitter->setFrameShape(QFrame::NoFrame);
     }
 
 }
 
+void QtToolkit::Animation::fadeSlideIn(QWidget* widget) {
 
-void QtToolkitAnimation::animateIn(QWidget *widget) {
-    QPoint endPos = widget->pos();
-    widget->move(endPos.x(), endPos.y() + 20);
+    if (widget != nullptr)
+    {
+        QPoint endPos = widget->pos();
+        widget->move(endPos.x(), endPos.y() + 20);
 
-    auto *effect = new QGraphicsOpacityEffect(widget);
-    widget->setGraphicsEffect(effect);
+        auto *effect = new QGraphicsOpacityEffect(widget);
+        widget->setGraphicsEffect(effect);
 
-    QEasingCurve customCurve(QEasingCurve::BezierSpline);
-    customCurve.addCubicBezierSegment(
-        QPointF(0.34, -0.04),
-        QPointF(0.49, 0.93),
-        QPointF(1.0, 1.0)
-    );
+        QEasingCurve customCurve(QEasingCurve::BezierSpline);
+        customCurve.addCubicBezierSegment(
+            QPointF(0.34, -0.04),
+            QPointF(0.49, 0.93),
+            QPointF(1.0, 1.0)
+        );
+        auto *fade = new QPropertyAnimation(effect, "opacity");
+        fade->setDuration(750);
+        fade->setStartValue(0.0);
+        fade->setEndValue(1.0);
+        fade->setEasingCurve(customCurve);
 
-    auto *fade = new QPropertyAnimation(effect, "opacity");
-    fade->setDuration(750);
-    fade->setStartValue(0.0);
-    fade->setEndValue(1.0);
-    fade->setEasingCurve(customCurve);
+        auto *slide = new QPropertyAnimation(widget, "pos");
+        slide->setDuration(740);
+        slide->setEndValue(endPos);
+        slide->setEasingCurve(customCurve);
 
-    auto *slide = new QPropertyAnimation(widget, "pos");
-    slide->setDuration(740);
-    slide->setEndValue(endPos);
-    slide->setEasingCurve(customCurve);
-
-    auto *group = new QParallelAnimationGroup(widget);
-    group->addAnimation(fade);
-    group->addAnimation(slide);
-    group->start(QAbstractAnimation::DeleteWhenStopped);
+        auto *group = new QParallelAnimationGroup(widget);
+        group->addAnimation(fade);
+        group->addAnimation(slide);
+        group->start(QAbstractAnimation::DeleteWhenStopped);
+    }
 }

@@ -5,25 +5,67 @@
 #ifndef KEEPCOLD_QTWIDGETSTOOLKIT_H
 #define KEEPCOLD_QTWIDGETSTOOLKIT_H
 
+#include <QEvent>
 #include <QFrame>
+#include <QGraphicsBlurEffect>
+#include <QGraphicsOpacityEffect>
+#include <QGraphicsPixmapItem>
+#include <QGraphicsScene>
+#include <QLabel>
 #include <QLayout>
+#include <QMainWindow>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QParallelAnimationGroup>
 #include <QProgressBar>
 #include <QPropertyAnimation>
+#include <QSizeGrip>
 #include <QSplitter>
 #include <QString>
+#include <QTextEdit>
+#include <QVBoxLayout>
 #include <QWidget>
-#include <QGraphicsOpacityEffect>
-#include <QPropertyAnimation>
-#include <QParallelAnimationGroup>
-
-namespace QtToolkitAnimation
-{
-    void animateIn(QWidget *widget);
-}
-
 
 namespace QtToolkit
 {
+namespace Animation
+{
+void fadeSlideIn(QWidget* widget);
+}
+
+namespace Window
+{
+class Maximizer : public QWidget
+{
+private:
+    static bool m_isMaximized;
+    static QRect m_normalGeometry;
+    static QLabel* m_frameSnapshot;
+
+public:
+    void toggle(QWidget* widget, int msec = 500);
+};
+
+class Dragger : public QObject
+{
+    bool m_dragging = false;
+    QPoint m_dragStartPosition;
+    static QWidget* s_target;
+    static Dragger* s_instance;
+
+private:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
+public:
+    static void attach(QWidget* widget);
+};
+}  // namespace Window
+
+namespace Blur
+{
+QLabel* render(QWidget* parent, qreal blurRadius = 3);
+}
+
 namespace ProgessBar
 {
 class SegmentedProgressBar : public QProgressBar
@@ -62,12 +104,15 @@ private:
 
 namespace Splitter
 {
+// Remove firstChild e secondChild do layout de parent e os recoloca lado a lado dentro de um
+// QSplitter.
 void setupSplitter(
-    QWidget* pai,
-    QWidget* irmao_1,
-    QWidget* irmao_2,
+    QWidget* parent,
+    QWidget* firstChild,
+    QWidget* secondChild,
     QFrame::Shape shape = QFrame::NoFrame,
-    QString StyleSheets = "");
-}
+    QString styleSheet = "");
+}  // namespace Splitter
+
 }  // namespace QtToolkit
 #endif  // KEEPCOLD_QTWIDGETSTOOLKIT_H
