@@ -300,3 +300,13 @@ void QtToolkit::Animation::fadeSlideIn(QWidget* widget) {
         group->start(QAbstractAnimation::DeleteWhenStopped);
     }
 }
+
+QPoint QtToolkit::geometry::centeredPosition(QWidget * parent, QWidget * child, int centerDivisor)
+{
+    if (parent != nullptr && child != nullptr)
+    {
+       return  parent->geometry().center() -
+            QPoint(child->width() / centerDivisor,  child->height() / centerDivisor);
+    }
+    return QPoint();
+}

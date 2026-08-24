@@ -28,6 +28,12 @@
 
 namespace QtToolkit
 {
+
+namespace geometry
+{
+   QPoint centeredPosition(QWidget * parent, QWidget * child, int centerDivisor = 2);
+}
+
 namespace Animation
 {
 void fadeSlideIn(QWidget* widget);
