@@ -48,8 +48,3 @@ maximizer.toggle(this);
 - `Window::Dragger` and `ProgessBar::SegmentedProgressBar` currently use a shared 
   (singleton-style) instance internally — only one active instance is supported 
   per application at this time.
-
-
-## License
-
-MIT — see [LICENSE](LICENSE) for details.
