@@ -13,10 +13,11 @@ namespace Signal
 {
 
 template <typename T>
-T* getObjet(QObject* get = QObject::sender())
+T* getObjet(QObject* get)
 {
     if (get != nullptr)
         return qobject_cast<T*>(get);
+    return nullptr;
 }
 
 }  // namespace Signal
