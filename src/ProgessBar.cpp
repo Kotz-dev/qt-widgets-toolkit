@@ -105,6 +105,7 @@ QColor QtToolkit::ProgessBar::SegmentedProgressBar::colorForLevel(int filledCoun
 
 void QtToolkit::ProgessBar::SegmentedProgressBar::paintEvent(QPaintEvent* event)
 {
+    if (event != nullptr){
     Q_UNUSED(event);
 
     QPainter painter(this);
@@ -126,5 +127,7 @@ void QtToolkit::ProgessBar::SegmentedProgressBar::paintEvent(QPaintEvent* event)
         painter.setBrush(color);
         painter.setPen(Qt::NoPen);
         painter.drawRoundedRect(rect, 2, 2);
+    }
+        
     }
 }
