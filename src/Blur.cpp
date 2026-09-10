@@ -9,16 +9,15 @@
 #include <QGraphicsScene>
 #include <QLabel>
 #include <QPainter>
-#include <memory>
 
-QLabel* QtToolkit::Blur::render(QWidget* parent, qreal blurRadius)
+BlurredLabel * QtToolkit::Blur::applyBlur(QWidget* target, qreal blurRadius)
 {
-    if (parent == nullptr || blurRadius <= 0.0)
+    if (target == nullptr || blurRadius <= 0.0)
     {
         return nullptr;
     }
 
-    QPixmap original = parent->grab();
+    QPixmap original = target->grab();
     if (original.isNull())
     {
         return nullptr;
@@ -48,11 +47,19 @@ QLabel* QtToolkit::Blur::render(QWidget* parent, qreal blurRadius)
         return nullptr;
     }
 
-    QLabel* label = new QLabel(parent);
+    QLabel* label = new QLabel(target);
+
     label->setPixmap(blurred);
-    label->setGeometry(parent->rect());
+    label->setGeometry(target->rect());
     label->show();
     label->raise();
 
     return label;
+}
+
+
+void QtToolkit::Blur::removeBlur(BlurredLabel *blurred) {
+    if (blurred != nullptr) {
+        delete blurred;
+    }
 }

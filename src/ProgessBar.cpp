@@ -106,27 +106,29 @@ QColor QtToolkit::ProgessBar::SegmentedProgressBar::colorForLevel(int filledCoun
 void QtToolkit::ProgessBar::SegmentedProgressBar::paintEvent(QPaintEvent* event)
 {
     if (event != nullptr){
-    Q_UNUSED(event);
+    if (event != nullptr) {
+        Q_UNUSED(event);
 
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
 
-    int spacing = 4;
-    int totalSpacing = spacing * (m_segments - 1);
-    int segmentWidth = (width() - totalSpacing) / m_segments;
+        int spacing = 4;
+        int totalSpacing = spacing * (m_segments - 1);
+        int segmentWidth = (width() - totalSpacing) / m_segments;
 
-    int filledCount = m_segments > 0 ? (value() * m_segments) / qMax(1, maximum()) : 0;
+        int filledCount = m_segments > 0 ? (value() * m_segments) / qMax(1, maximum()) : 0;
 
-    for (int i = 0; i < m_segments; i++)
-    {
-        int x = i * (segmentWidth + spacing);
-        QRect rect(x, 0, segmentWidth, height());
+        for (int i = 0; i < m_segments; i++)
+        {
+            int x = i * (segmentWidth + spacing);
+            QRect rect(x, 0, segmentWidth, height());
 
-        QColor color = (i < filledCount) ? m_animatedColor : QColor("#3a4368");
+            QColor color = (i < filledCount) ? m_animatedColor : QColor("#3a4368");
 
-        painter.setBrush(color);
-        painter.setPen(Qt::NoPen);
-        painter.drawRoundedRect(rect, 2, 2);
+            painter.setBrush(color);
+            painter.setPen(Qt::NoPen);
+            painter.drawRoundedRect(rect, 2, 2);
+        }
     }
         
     }

@@ -29,7 +29,7 @@ public:
     static QScreen* oldScreen;
     static QWidget* oldWidget;
 
-    void toggle(QWidget* widget, int msec = 500);
+    static void toggle(QWidget* widget, int msec = 500);
     static void resync(QWidget* widget);
 };
 
