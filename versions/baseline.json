@@ -1,0 +1,8 @@
+{
+  "default": {
+    "qtwidgetstoolkit": {
+      "baseline": "0.1.3",
+      "port-version": 0
+    }
+  }
+}
