@@ -54,17 +54,37 @@ jobs:
           git add ports/qtwidgetstoolkit
           git diff --cached --quiet && echo "no port changes" || git commit -m "chore(vcpkg): update port to ${{ steps.resolve.outputs.version }}"
 
-      - name: Bootstrap vcpkg tool
-        run: |
-          set -euo pipefail
-          git clone --depth 1 https://github.com/microsoft/vcpkg.git ../vcpkg-tool
-          ../vcpkg-tool/bootstrap-vcpkg.sh -disableMetrics
-
       - name: Regenerate versions database
         run: |
-          ../vcpkg-tool/vcpkg x-add-version qtwidgetstoolkit --overwrite-version \
-            --x-builtin-ports-root="${{ github.workspace }}/ports" \
-            --x-builtin-registry-versions-dir="${{ github.workspace }}/versions"
+          set -euo pipefail
+          VERSION="${{ steps.resolve.outputs.version }}"
+          TREE=$(git rev-parse HEAD:ports/qtwidgetstoolkit)
+
+          mkdir -p versions/q-
+          BASELINE=versions/baseline.json
+          if [ -f "$BASELINE" ]; then
+            jq --arg v "$VERSION" \
+               '.default.qtwidgetstoolkit = {"baseline": $v, "port-version": 0}' \
+               "$BASELINE" > /tmp/baseline.json
+          else
+            jq -n --arg v "$VERSION" \
+               '{"default": {"qtwidgetstoolkit": {"baseline": $v, "port-version": 0}}}' \
+               > /tmp/baseline.json
+          fi
+          mv /tmp/baseline.json "$BASELINE"
+
+          PORT_VERSIONS=versions/q-/qtwidgetstoolkit.json
+          if [ -f "$PORT_VERSIONS" ]; then
+            jq --arg v "$VERSION" --arg t "$TREE" \
+               '.versions = ([{"version": $v, "port-version": 0, "git-tree": $t}]
+                 + (.versions | map(select(.version != $v))))' \
+               "$PORT_VERSIONS" > /tmp/versions.json
+          else
+            jq -n --arg v "$VERSION" --arg t "$TREE" \
+               '{"versions": [{"version": $v, "port-version": 0, "git-tree": $t}]}' \
+               > /tmp/versions.json
+          fi
+          mv /tmp/versions.json "$PORT_VERSIONS"
 
       - name: Commit and push versions database
         run: |
