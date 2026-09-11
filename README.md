@@ -87,4 +87,39 @@ target_link_libraries(my_app PRIVATE QtWidgetStoolkit::QtWidgetStoolkit)
 #include <QtWidgetStoolkit/Animation.h>          // a single module
 ```
 
+## Using it via vcpkg
+
+This repository doubles as its own private vcpkg registry (`ports/` + `versions/` at
+the repo root). Every time a GitHub Release is published here, the
+[`vcpkg-registry-update`](.github/workflows/vcpkg-registry-update.yml) workflow
+points the port at the new tag and regenerates the version database automatically
+— no manual step on this side.
+
+To consume it from another project, add a `vcpkg-configuration.json` next to your
+`vcpkg.json`:
+
+```json
+{
+  "default-registry": {
+    "kind": "builtin",
+    "baseline": "<commit-sha-of-the-vcpkg-baseline-you-use>"
+  },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/Kotz-dev/qt-widgets-toolkit",
+      "baseline": "<commit-sha-on-Master>",
+      "packages": ["qtwidgetstoolkit"]
+    }
+  ]
+}
+```
+
+Then add `"qtwidgetstoolkit"` to your `vcpkg.json` dependencies. The `baseline`
+must be a commit SHA on `Master` (vcpkg pins to a specific commit for
+reproducible builds) — bump it whenever you want to pick up a newer release.
+
+For local development against this working copy instead of a tagged release,
+use the overlay port in `vcpkg-overlay/` with `--overlay-ports=vcpkg-overlay/ports`.
+
 

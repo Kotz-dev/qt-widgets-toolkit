@@ -1,0 +1,74 @@
+name: Update vcpkg registry
+
+# Runs every time a GitHub Release is published on this repo and keeps this
+# same repository usable as a private vcpkg registry: it points the port at
+# the new tag, recomputes its checksum, and regenerates versions/baseline.json
+# + versions/q-/qtwidgetstoolkit.json so consumers pick up the new version as
+# soon as this workflow finishes (no manual step, no external PR/review).
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-port:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Resolve version and release tarball checksum
+        id: resolve
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          SHA512=$(curl -sL "https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz" | sha512sum | cut -d' ' -f1)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha512=$SHA512" >> "$GITHUB_OUTPUT"
+
+      - name: Update port version and portfile
+        run: |
+          set -euo pipefail
+          jq --arg v "${{ steps.resolve.outputs.version }}" \
+             '.version = $v | ."port-version" = 0' \
+             ports/qtwidgetstoolkit/vcpkg.json > /tmp/vcpkg.json
+          mv /tmp/vcpkg.json ports/qtwidgetstoolkit/vcpkg.json
+
+          sed -i \
+            -e 's|REF "[^"]*"|REF "${{ steps.resolve.outputs.tag }}"|' \
+            -e 's|SHA512 [0-9a-fA-F]\{128\}|SHA512 ${{ steps.resolve.outputs.sha512 }}|' \
+            ports/qtwidgetstoolkit/portfile.cmake
+
+      - name: Commit port update
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ports/qtwidgetstoolkit
+          git diff --cached --quiet && echo "no port changes" || git commit -m "chore(vcpkg): update port to ${{ steps.resolve.outputs.version }}"
+
+      - name: Bootstrap vcpkg tool
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git ../vcpkg-tool
+          ../vcpkg-tool/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Regenerate versions database
+        run: |
+          ../vcpkg-tool/vcpkg x-add-version qtwidgetstoolkit --overwrite-version \
+            --x-builtin-ports-root="${{ github.workspace }}/ports" \
+            --x-builtin-registry-versions-dir="${{ github.workspace }}/versions"
+
+      - name: Commit and push versions database
+        run: |
+          set -euo pipefail
+          git add versions/
+          git diff --cached --quiet && echo "no version-db changes" || git commit -m "chore(vcpkg): register version ${{ steps.resolve.outputs.version }}"
+          git push origin HEAD:${{ github.event.repository.default_branch }}
