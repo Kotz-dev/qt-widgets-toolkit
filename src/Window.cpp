@@ -14,7 +14,7 @@ QtToolkit::Window::Dragger* QtToolkit::Window::Dragger::s_instance = nullptr;
 bool QtToolkit::Window::Maximizer::m_isMaximized = false;
 QRect QtToolkit::Window::Maximizer::m_normalGeometry;
 QWidget* QtToolkit::Window::Maximizer::oldWidget;
-QScreen* QtToolkit::Window::Maximizer::oldScreen;
+QScreen* QtToolkit::Window::Maximizer::m_normalScreen;
 
 bool QtToolkit::Window::Dragger::eventFilter(QObject* watched, QEvent* event)
 {
@@ -75,30 +75,50 @@ void QtToolkit::Window::Dragger::attach(QWidget* widget)
 
 void QtToolkit::Window::Maximizer::toggle(QWidget* widget, int msec)
 {
-    if (widget != nullptr && msec > 0)
+    if (widget == nullptr || msec <= 0)
+        return;
+
+    auto* anim = new QPropertyAnimation(widget, "geometry");
+    anim->setDuration(msec);
+    anim->setEasingCurve(QEasingCurve::OutCubic);
+
+    if (!m_isMaximized)
     {
-        auto* anim = new QPropertyAnimation(widget, "geometry");
-        anim->setDuration(msec);
-        anim->setEasingCurve(QEasingCurve::OutCubic);
-        if (!m_isMaximized)
-        {
-            m_normalGeometry = widget->geometry();
-            QRect screenGeometry = widget->screen()->availableGeometry();
-            anim->setStartValue(widget->geometry());
-            anim->setEndValue(screenGeometry);
-            m_isMaximized = true;
-        }
-        else
-        {
-            anim->setStartValue(widget->geometry());
-            anim->setEndValue(m_normalGeometry);
-            m_isMaximized = false;
-        }
+        m_normalGeometry = widget->geometry();
+        m_normalScreen   = widget->screen();
 
-        anim->start(QAbstractAnimation::DeleteWhenStopped);
+        QRect screenGeometry = widget->screen()->availableGeometry();
+        anim->setStartValue(widget->geometry());
+        anim->setEndValue(screenGeometry);
+        m_isMaximized = true;
     }
-}
+    else
+    {
+        anim->setStartValue(widget->geometry());
 
+        QScreen* currentScreen = widget->screen();
+        if (currentScreen != m_normalScreen)
+        {
+            QRect oldAvail = m_normalScreen->availableGeometry();
+            QRect newAvail = currentScreen->availableGeometry();
+
+            qreal relX = qreal(m_normalGeometry.x() - oldAvail.x()) / oldAvail.width();
+            qreal relY = qreal(m_normalGeometry.y() - oldAvail.y()) / oldAvail.height();
+
+            QRect remapped = m_normalGeometry;
+            remapped.moveTo(newAvail.x() + relX * newAvail.width(),
+                             newAvail.y() + relY * newAvail.height());
+
+            m_normalGeometry = remapped;
+            m_normalScreen   = currentScreen;
+        }
+
+        anim->setEndValue(m_normalGeometry);
+        m_isMaximized = false;
+    }
+
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
 void QtToolkit::Window::Maximizer::resync(QWidget* widget)
 {
     if (widget == nullptr || widget->screen() == nullptr)
