@@ -26,7 +26,7 @@ private:
     static QRect m_normalGeometry;
 
 public:
-    static QScreen* oldScreen;
+    static QScreen* m_normalScreen;
     static QWidget* oldWidget;
 
     static void toggle(QWidget* widget, int msec = 500);
