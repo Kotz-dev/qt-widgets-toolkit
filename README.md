@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="img/logo.png" alt="QtToolkit" width="418">
+  <img src="img/WidgetsToolkit — Qt Logo.png" alt="QtToolkit" width="650">
 
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat&logo=cplusplus)
 ![Qt](https://img.shields.io/badge/Qt-41CD52?style=flat&logo=qt)
