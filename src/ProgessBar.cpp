@@ -32,9 +32,9 @@ QtToolkit::ProgessBar::SegmentedProgressBar::~SegmentedProgressBar()
     }
 }
 
-void QtToolkit::ProgessBar::SegmentedProgressBar::render(int value, QWidget* ProgressBar)
+void QtToolkit::ProgessBar::SegmentedProgressBar::applyProgressBar(int value, QWidget* ProgressBar)
 {
-    if (ProgressBar != nullptr)
+    if (ProgressBar != nullptr && value != 0 && value > 0)
     {
         if (s_instance == nullptr)
         {
