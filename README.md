@@ -17,7 +17,7 @@ Reusable Qt Widgets components (splitter, blur effect, window dragging/maximizin
 | Component | Description |
 |---|---|
 | `Splitter::setupSplitter` | Turns two existing widgets into a draggable-divider layout |
-| `Blur::render` | Captures and blurs a widget's content, useful for modal backdrops |
+| `Blur::applyBlur` | Captures and blurs a widget's content, useful for modal backdrops |
 | `Window::Dragger` | Makes a frameless window draggable via a title bar area |
 | `Window::Maximizer` | Animated window maximize/restore for frameless windows |
 | `ProgessBar::SegmentedProgressBar` | Segmented progress bar with animated color transitions |
@@ -35,7 +35,8 @@ No build system dependency — copy the header/source files you need directly in
 QtToolkit::Splitter::setupSplitter(ui->parent, ui->frame_18, ui->stackedWidget_2);
 
 // Blur
-QLabel *blurred = QtToolkit::Blur::render(this, 20.0);
+BlurredLabel *blurred = QtToolkit::Blur::applyBlur(this, 20.0);
+QtToolkit::Blur::removeBlur(blurred); // undo when no longer needed
 
 // Frameless window drag + maximize
 QtToolkit::Window::Dragger::attach(ui->titleBar);
@@ -62,7 +63,9 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ```
 
-Produces the static library `QtWidgetStoolkit` (`libQtWidgetStoolkit.a` on Linux/macOS, `QtWidgetStoolkit.lib` on Windows).
+Produces the static library `QtWidgetStoolkit` (`libQtWidgetStoolkit.a` on Linux/macOS, `QtWidgetStoolkit.lib` on Windows) inside `build/`.
+
+> On Windows with a multi-config generator (Visual Studio), `CMAKE_BUILD_TYPE` is ignored — pass the configuration to the build step instead: `cmake --build build --config Release`.
 
 ## Installation
 
@@ -70,7 +73,13 @@ Produces the static library `QtWidgetStoolkit` (`libQtWidgetStoolkit.a` on Linux
 cmake --install build --prefix <destination-directory>
 ```
 
-This installs the headers and the compiled library together with the CMake config files (`QtWidgetStoolkitConfig.cmake`), so the package can be consumed without needing the source `.cpp` files.
+This copies into `<destination-directory>` everything another programmer needs to link against the library, without requiring the source `.cpp` files:
+
+- `include/QtWidgetStoolkit/*.h` — the public headers
+- `lib/QtWidgetStoolkit.lib` (Windows) or `lib/libQtWidgetStoolkit.a` (Linux/macOS) — the compiled static library
+- `lib/cmake/QtWidgetStoolkit/*.cmake` — the `QtWidgetStoolkitConfig.cmake` / `QtWidgetStoolkitConfigVersion.cmake` files consumed by `find_package`
+
+> On Windows with Visual Studio, also pass the matching configuration to install: `cmake --install build --prefix <destination-directory> --config Release`.
 
 ## Using it in another project
 

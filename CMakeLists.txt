@@ -20,6 +20,8 @@ add_library(QtWidgetStoolkit STATIC
         src/Frame.cpp
         include/QtWidgetStoolkit/Geometry.h
         src/Geometry.cpp
+        include/QtWidgetStoolkit/ListReorder.h
+        src/ListReorder.cpp
         include/QtWidgetStoolkit/ProgessBar.h
         src/ProgessBar.cpp
         include/QtWidgetStoolkit/Signal.h

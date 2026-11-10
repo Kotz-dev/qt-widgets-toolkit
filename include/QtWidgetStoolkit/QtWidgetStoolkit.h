@@ -9,6 +9,7 @@
 #include "QtWidgetStoolkit/Blur.h"
 #include "QtWidgetStoolkit/Frame.h"
 #include "QtWidgetStoolkit/Geometry.h"
+#include "QtWidgetStoolkit/ListReorder.h"
 #include "QtWidgetStoolkit/ProgessBar.h"
 #include "QtWidgetStoolkit/Signal.h"
 #include "QtWidgetStoolkit/Splitter.h"
