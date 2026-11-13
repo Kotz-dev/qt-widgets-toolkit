@@ -14,6 +14,8 @@ add_library(QtWidgetStoolkit STATIC
         include/QtWidgetStoolkit/QtWidgetStoolkit.h
         include/QtWidgetStoolkit/Animation.h
         src/Animation.cpp
+        include/QtWidgetStoolkit/Badge.h
+        src/Badge.cpp
         include/QtWidgetStoolkit/Blur.h
         src/Blur.cpp
         include/QtWidgetStoolkit/Frame.h

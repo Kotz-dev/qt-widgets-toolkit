@@ -23,16 +23,16 @@ QtToolkit::ListReorder::Reorderer* QtToolkit::ListReorder::Reorderer::attach(QLi
 
     Reorderer* reorderer = new Reorderer(listView);
 
-    if (reorderer != nullptr)
     QObject::connect(
             listView->model(),
             &QAbstractItemModel::rowsMoved,
             reorderer,
-            [reorderer](const QModelIndex&, int start, int, const QModelIndex&, int destRow)
+            [reorderer,listView](const QModelIndex&, int start, int, const QModelIndex&, int destRow)
             {
                 int toIndex = destRow > start ? destRow - 1 : destRow;
                 emit reorderer->itemMoved(start, toIndex);
             });
+
 
     return reorderer;
 }

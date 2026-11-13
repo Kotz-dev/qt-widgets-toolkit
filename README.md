@@ -18,6 +18,7 @@ Reusable Qt Widgets components (splitter, blur effect, window dragging/maximizin
 |---|---|
 | `Splitter::setupSplitter` | Turns two existing widgets into a draggable-divider layout |
 | `Blur::applyBlur` | Captures and blurs a widget's content, useful for modal backdrops |
+| `Badge::attach` / `Badge::setCount` | Numeric counter badge (green circle, "99+" overflow) on a `QPushButton` (any corner, edge or center) |
 | `Window::Dragger` | Makes a frameless window draggable via a title bar area |
 | `Window::Maximizer` | Animated window maximize/restore for frameless windows |
 | `ProgessBar::SegmentedProgressBar` | Segmented progress bar with animated color transitions |
@@ -37,6 +38,10 @@ QtToolkit::Splitter::setupSplitter(ui->parent, ui->frame_18, ui->stackedWidget_2
 // Blur
 BlurredLabel *blurred = QtToolkit::Blur::applyBlur(this, 20.0);
 QtToolkit::Blur::removeBlur(blurred); // undo when no longer needed
+
+// Badge (item counter on a button)
+QLabel *badge = QtToolkit::Badge::attach(ui->btn_documents, 5, "#2e9e44", "#FFFFFF", QtToolkit::Badge::SIDE); // CENTER, TOP_LEFT, TOP, TOP_RIGHT (default), LEFT, RIGHT, BOTTOM_LEFT, BOTTOM, BOTTOM_RIGHT
+QtToolkit::Badge::setCount(badge, 120); // shows "99+"; count <= 0 hides it
 
 // Frameless window drag + maximize
 QtToolkit::Window::Dragger::attach(ui->titleBar);

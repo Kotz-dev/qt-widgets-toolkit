@@ -6,6 +6,7 @@
 #define QTWIDGETSTOOLKIT_H
 
 #include "QtWidgetStoolkit/Animation.h"
+#include "QtWidgetStoolkit/Badge.h"
 #include "QtWidgetStoolkit/Blur.h"
 #include "QtWidgetStoolkit/Frame.h"
 #include "QtWidgetStoolkit/Geometry.h"
