@@ -10,12 +10,16 @@ namespace
 constexpr int kBadgeSize = 20;
 constexpr int kBadgeWideSize = 28;
 constexpr int kBadgeMargin = 2;
+constexpr auto kBadgeObjectName = "qtToolkitBadge";
 
 using QtToolkit::Badge::Position;
 
 // Calcula a posição do badge dentro do pai conforme a property "badgePosition".
 void reposition(QLabel* badge)
 {
+    if (badge == nullptr) {
+        return;
+    }
     QWidget* parent = badge->parentWidget();
     if (parent == nullptr)
         return;
@@ -80,13 +84,19 @@ QString normalizeHexColor(const QString& get) {
 }
 
 
-QLabel *QtToolkit::Badge::attach(QPushButton *button, int count,
+QLabel *QtToolkit::Badge::attach(QWidget *target, int count,
                                  BADGE_PRODPY OBJ = BADGE_PRODPY{}) {
-    if (button == nullptr)
+    if (target == nullptr)
         return nullptr;
 
+    if (auto* existing = target->findChild<QLabel*>(kBadgeObjectName, Qt::FindDirectChildrenOnly))
+    {
+        setCount(existing, count);
+        return existing;
+    }
 
-    QLabel* badge = new QLabel(button);
+    QLabel* badge = new QLabel(target);
+    badge->setObjectName(kBadgeObjectName);
     badge->setFixedSize(kBadgeSize, kBadgeSize);
     badge->setAlignment(Qt::AlignCenter);
     badge->setStyleSheet
@@ -100,7 +110,7 @@ QLabel *QtToolkit::Badge::attach(QPushButton *button, int count,
     badge->setAttribute(Qt::WA_TransparentForMouseEvents);
     badge->setProperty("badgePosition", static_cast<int>(OBJ.BADGE_POSITION));
 
-    button->installEventFilter(new BadgeFilter(badge));
+    target->installEventFilter(new BadgeFilter(badge));
 
     setCount(badge, count);
     return badge;
@@ -108,17 +118,26 @@ QLabel *QtToolkit::Badge::attach(QPushButton *button, int count,
 
 
 
-QLabel * QtToolkit::Badge::attach(QPushButton* button, int count, const QString COLOR_BACKGROUND,
+QLabel * QtToolkit::Badge::attach(QWidget* target, int count, const QString COLOR_BACKGROUND,
 const QString COLOR_TEXT_BADGE, Position BADGE_POSITION, QString FONT_WEIGHT,
 int FONT_SIZE, QString BORDER_RADIUS)
 {
-    if (button == nullptr)
+    if (target == nullptr)
         return nullptr;
+
+    if (auto* existing = target->findChild<QLabel*>(kBadgeObjectName,
+        Qt::FindDirectChildrenOnly))
+    {
+        setCount(existing, count);
+        return existing;
+    }
 
     QString BG_COLOR_BACKGROUND  = normalizeHexColor(COLOR_BACKGROUND);
     QString BG_COLOR_TEXT_BADGE  = normalizeHexColor(COLOR_TEXT_BADGE);
 
-    QLabel* badge = new QLabel(button);
+    QLabel *badge = new QLabel(target);
+    badge->setObjectName(kBadgeObjectName);
+
     badge->setFixedSize(kBadgeSize, kBadgeSize);
     badge->setAlignment(Qt::AlignCenter);
     badge->setStyleSheet(
@@ -130,9 +149,10 @@ int FONT_SIZE, QString BORDER_RADIUS)
     badge->setAttribute(Qt::WA_TransparentForMouseEvents);
     badge->setProperty("badgePosition", static_cast<int>(BADGE_POSITION));
 
-    button->installEventFilter(new BadgeFilter(badge));
+    target->installEventFilter(new BadgeFilter(badge));
 
     setCount(badge, count);
+
     return badge;
 }
 

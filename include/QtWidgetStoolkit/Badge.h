@@ -7,7 +7,7 @@
 
 #include <QEvent>
 #include <QLabel>
-#include <QPushButton>
+#include <QWidget>
 
 namespace QtToolkit
 {
@@ -15,7 +15,7 @@ namespace Badge
 {
 enum Position
 {
-    CENTER = 0,
+    CENTER ,
     TOP_LEFT,
     TOP,
     TOP_RIGHT,
@@ -35,10 +35,10 @@ struct BADGE_PRODPY {
 
 };
 
-QLabel* attach(QPushButton* button,int count,BADGE_PRODPY OBJ);
+QLabel* attach(QWidget* target,int count,BADGE_PRODPY OBJ);
 QLabel* attach
 (
-     QPushButton* button,
+     QWidget* target,
      int count = 0,
      const QString BACKGROUND_COLOR = "#2e9e44"
   ,  const QString COLOR_TEXT_BADGE = "#FFFFFF",
@@ -47,6 +47,8 @@ QLabel* attach
   ,  int FONT_SIZE = 11
   ,  QString BORDER_RADIUS = "10px"
   );
+
+
 
 void setCount(QLabel* badge, int count);
 }  // namespace Badge
