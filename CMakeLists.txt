@@ -14,12 +14,16 @@ add_library(QtWidgetStoolkit STATIC
         include/QtWidgetStoolkit/QtWidgetStoolkit.h
         include/QtWidgetStoolkit/Animation.h
         src/Animation.cpp
+        include/QtWidgetStoolkit/Badge.h
+        src/Badge.cpp
         include/QtWidgetStoolkit/Blur.h
         src/Blur.cpp
         include/QtWidgetStoolkit/Frame.h
         src/Frame.cpp
         include/QtWidgetStoolkit/Geometry.h
         src/Geometry.cpp
+        include/QtWidgetStoolkit/ListReorder.h
+        src/ListReorder.cpp
         include/QtWidgetStoolkit/ProgessBar.h
         src/ProgessBar.cpp
         include/QtWidgetStoolkit/Signal.h

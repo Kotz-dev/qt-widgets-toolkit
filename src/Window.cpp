@@ -75,8 +75,9 @@ void QtToolkit::Window::Dragger::attach(QWidget* widget)
 
 void QtToolkit::Window::Maximizer::toggle(QWidget* widget, int msec)
 {
-    if (widget == nullptr || msec <= 0)
+    if (widget == nullptr || msec <= 0) {
         return;
+    }
 
     auto* anim = new QPropertyAnimation(widget, "geometry");
     anim->setDuration(msec);
@@ -102,8 +103,10 @@ void QtToolkit::Window::Maximizer::toggle(QWidget* widget, int msec)
             QRect oldAvail = m_normalScreen->availableGeometry();
             QRect newAvail = currentScreen->availableGeometry();
 
-            qreal relX = qreal(m_normalGeometry.x() - oldAvail.x()) / oldAvail.width();
-            qreal relY = qreal(m_normalGeometry.y() - oldAvail.y()) / oldAvail.height();
+            qreal relX =
+                qreal(m_normalGeometry.x() - oldAvail.x()) / oldAvail.width();
+            qreal relY =
+                qreal(m_normalGeometry.y() - oldAvail.y()) / oldAvail.height();
 
             QRect remapped = m_normalGeometry;
             remapped.moveTo(newAvail.x() + relX * newAvail.width(),

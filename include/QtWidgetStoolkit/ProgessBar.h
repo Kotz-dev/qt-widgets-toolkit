@@ -33,7 +33,7 @@ public:
 
     void setAnimatedColor(const QColor& color);
 
-    static void render(int value, QWidget* ProgressBar);
+    static void applyProgressBar(int value, QWidget* ProgressBar);
 
 protected:
     void paintEvent(QPaintEvent* event) override;

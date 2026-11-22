@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="img/logo.png" alt="QtToolkit" width="418">
+  <img src="img/WidgetsToolkit — Qt Logo.png" alt="QtToolkit" width="650">
 
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat&logo=cplusplus)
 ![Qt](https://img.shields.io/badge/Qt-41CD52?style=flat&logo=qt)
@@ -17,7 +17,11 @@ Reusable Qt Widgets components (splitter, blur effect, window dragging/maximizin
 | Component | Description |
 |---|---|
 | `Splitter::setupSplitter` | Turns two existing widgets into a draggable-divider layout |
-| `Blur::render` | Captures and blurs a widget's content, useful for modal backdrops |
+| `Blur::applyBlur` | Captures and blurs a widget's content, useful for modal backdrops |
+| `Badge::attach` / `Badge::setCount` | Numeric counter badge (green circle, "99+" overflow) on any `QWidget` (`QPushButton`, `QFrame`, ...) in any corner, edge or center. Calling `attach` again on the same widget reuses the existing badge and only updates its count |
+| `ListReorder::attach` | Drag-and-drop reordering for a `QListWidget`; emits `itemMoved(from, to)` and can keep a `std::vector<T>` in sync with the visual order (by reference, or via `std::shared_ptr` when the vector may outlive its owner) |
+| `Frame::makeClickable` | Makes a `QFrame` react to mouse presses with a callback (also sets the pointing-hand cursor) |
+| `Signal::getObjet<T>` | Null-safe `qobject_cast` helper (returns `nullptr` for a null `QObject*`) |
 | `Window::Dragger` | Makes a frameless window draggable via a title bar area |
 | `Window::Maximizer` | Animated window maximize/restore for frameless windows |
 | `ProgessBar::SegmentedProgressBar` | Segmented progress bar with animated color transitions |
@@ -35,7 +39,26 @@ No build system dependency — copy the header/source files you need directly in
 QtToolkit::Splitter::setupSplitter(ui->parent, ui->frame_18, ui->stackedWidget_2);
 
 // Blur
-QLabel *blurred = QtToolkit::Blur::render(this, 20.0);
+BlurredLabel *blurred = QtToolkit::Blur::applyBlur(this, 20.0);
+QtToolkit::Blur::removeBlur(blurred); // undo when no longer needed
+
+// Badge (item counter on a button, frame or any other QWidget)
+QLabel *badge = QtToolkit::Badge::attach(ui->btn_documents, 5, "#2e9e44", "#FFFFFF", QtToolkit::Badge::RIGHT); // CENTER, TOP_LEFT, TOP, TOP_RIGHT (default), LEFT, RIGHT, BOTTOM_LEFT, BOTTOM, BOTTOM_RIGHT
+QtToolkit::Badge::attach(ui->frame_card, 3);   // works with QFrame and other widgets
+QtToolkit::Badge::setCount(badge, 120); // shows "99+"; count <= 0 hides it
+QtToolkit::Badge::attach(ui->btn_documents, 7); // safe to call on every refresh: reuses the existing badge, only the count changes
+
+// ListReorder (drag to reorder a QListWidget)
+QtToolkit::ListReorder::attach(ui->listWidget);                          // only enables dragging and emits itemMoved(from, to)
+QtToolkit::ListReorder::attach(ui->listWidget, items);                   // also reorders std::vector<T> items; it is held BY REFERENCE, so it must outlive the list
+auto shared = std::make_shared<std::vector<Item>>();
+QtToolkit::ListReorder::attach(ui->listWidget, shared);                  // safe variant: the list shares ownership of the vector
+
+// Clickable frame
+QtToolkit::Frame::makeClickable(ui->frame_card, [] { /* handle click */ });
+
+// Null-safe qobject_cast
+auto *button = QtToolkit::Signal::getObjet<QPushButton>(sender());
 
 // Frameless window drag + maximize
 QtToolkit::Window::Dragger::attach(ui->titleBar);
@@ -48,6 +71,12 @@ maximizer.toggle(this);
 - `Window::Dragger` and `ProgessBar::SegmentedProgressBar` currently use a shared
   (singleton-style) instance internally — only one active instance is supported
   per application at this time.
+- `Badge::attach` is idempotent per widget: on repeated calls only the count is
+  updated, so color, position and font options passed after the first call are
+  ignored.
+- `ListReorder::attach(listWidget, std::vector<T>&)` stores the vector by reference:
+  it must outlive the list widget, otherwise the next drag is a use-after-free. Use
+  the `std::shared_ptr` overload when the vector's lifetime is not guaranteed.
 
 ## Requirements
 
@@ -62,7 +91,9 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ```
 
-Produces the static library `QtWidgetStoolkit` (`libQtWidgetStoolkit.a` on Linux/macOS, `QtWidgetStoolkit.lib` on Windows).
+Produces the static library `QtWidgetStoolkit` (`libQtWidgetStoolkit.a` on Linux/macOS, `QtWidgetStoolkit.lib` on Windows) inside `build/`.
+
+> On Windows with a multi-config generator (Visual Studio), `CMAKE_BUILD_TYPE` is ignored — pass the configuration to the build step instead: `cmake --build build --config Release`.
 
 ## Installation
 
@@ -70,7 +101,13 @@ Produces the static library `QtWidgetStoolkit` (`libQtWidgetStoolkit.a` on Linux
 cmake --install build --prefix <destination-directory>
 ```
 
-This installs the headers and the compiled library together with the CMake config files (`QtWidgetStoolkitConfig.cmake`), so the package can be consumed without needing the source `.cpp` files.
+This copies into `<destination-directory>` everything another programmer needs to link against the library, without requiring the source `.cpp` files:
+
+- `include/QtWidgetStoolkit/*.h` — the public headers
+- `lib/QtWidgetStoolkit.lib` (Windows) or `lib/libQtWidgetStoolkit.a` (Linux/macOS) — the compiled static library
+- `lib/cmake/QtWidgetStoolkit/*.cmake` — the `QtWidgetStoolkitConfig.cmake` / `QtWidgetStoolkitConfigVersion.cmake` files consumed by `find_package`
+
+> On Windows with Visual Studio, also pass the matching configuration to install: `cmake --install build --prefix <destination-directory> --config Release`.
 
 ## Using it in another project
 
