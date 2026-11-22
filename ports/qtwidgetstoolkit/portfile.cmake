@@ -4,8 +4,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Kotz-dev/qt-widgets-toolkit
-    REF "v0.1.3.1"
-    SHA512 8b07e14a5c0617a17b06ed9ad3fb9b99029c9c8a47371e43ca3ba6a08c736b2e0b6a097e90e8a7d06b6f1b7a0787d2b32742fe8484a4de79da3bca426806419f
+    REF "v0.1.4.0"
+    SHA512 021fc73918c5ddade7e0b97b285116dd54f41b20cfffce5c247d270dbbb8a6d5ebdb15b3b938770595a45db671bc793e418b37d2105d524fd988fbfd07d9307c
     HEAD_REF Master
 )
 
